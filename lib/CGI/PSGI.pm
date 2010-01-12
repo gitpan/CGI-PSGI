@@ -2,7 +2,7 @@ package CGI::PSGI;
 
 use strict;
 use 5.008_001;
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use base qw(CGI);
 
@@ -16,6 +16,7 @@ sub new {
     }, $class;
 
     local *ENV = $env;
+    local $CGI::MOD_PERL = 0;
     $self->SUPER::init;
 
     $self;
