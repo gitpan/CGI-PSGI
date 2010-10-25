@@ -2,7 +2,7 @@ package CGI::PSGI;
 
 use strict;
 use 5.008_001;
-our $VERSION = '0.11';
+our $VERSION = '0.12';
 
 use base qw(CGI);
 
@@ -100,7 +100,6 @@ sub psgi_header {
     # Maybe future compatibility.  Maybe not.
     my $protocol = $self->{psgi_env}{SERVER_PROTOCOL} || 'HTTP/1.0';
 
-    push(@header, "Status", $status) if $status;
     push(@header, "Window-Target", $target) if $target;
     if ($p3p) {
         $p3p = join ' ',@$p3p if ref($p3p) eq 'ARRAY';
