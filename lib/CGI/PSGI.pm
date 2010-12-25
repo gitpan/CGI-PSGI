@@ -2,7 +2,7 @@ package CGI::PSGI;
 
 use strict;
 use 5.008_001;
-our $VERSION = '0.13';
+our $VERSION = '0.14';
 
 use base qw(CGI);
 
@@ -72,6 +72,23 @@ sub psgi_header {
                         'STATUS',['COOKIE','COOKIES'],'TARGET',
                         'EXPIRES','NPH','CHARSET',
                         'ATTACHMENT','P3P'],@p);
+
+    # CR escaping for values, per RFC 822
+    for my $header ($type,$status,$cookie,$target,$expires,$nph,$charset,$attachment,$p3p,@other) {
+        if (defined $header) {
+            # From RFC 822:
+            # Unfolding  is  accomplished  by regarding   CRLF   immediately
+            # followed  by  a  LWSP-char  as equivalent to the LWSP-char.
+            $header =~ s/$CGI::CRLF(\s)/$1/g;
+
+            # All other uses of newlines are invalid input. 
+            if ($header =~ m/$CGI::CRLF|\015|\012/) {
+                # shorten very long values in the diagnostic
+                $header = substr($header,0,72).'...' if (length $header > 72);
+                die "Invalid header value contains a newline not followed by whitespace: $header";
+            }
+        }
+   }
 
     $type ||= 'text/html' unless defined($type);
     if (defined $charset) {
@@ -214,11 +231,11 @@ CGI::PSGI - Adapt CGI.pm to the PSGI protocol
 
   use CGI::PSGI;
 
-  sub app {
+  my $app = sub {
       my $env = shift;
       my $q = CGI::PSGI->new($env);
       return [ $q->psgi_header, [ $body ] ];
-  }
+  };
 
 =head1 DESCRIPTION
 
@@ -269,7 +286,7 @@ C<env> method as well as the hash key C<plack.session>.
 
 =head2 psgi_header
 
- my ($status_code, $headers_aref) = $cgi->psgi_header(%args); 
+ my ($status_code, $headers_aref) = $cgi->psgi_header(%args);
 
 Works like CGI.pm's L<header()>, but the return format is modified. It returns
 an array with the status code and arrayref of header pairs that PSGI
