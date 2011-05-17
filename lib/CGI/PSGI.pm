@@ -2,7 +2,7 @@ package CGI::PSGI;
 
 use strict;
 use 5.008_001;
-our $VERSION = '0.14';
+our $VERSION = '0.15';
 
 use base qw(CGI);
 
@@ -185,9 +185,12 @@ for my $method (qw(
     content_type
     path_translated
     request_uri
+    Accept
+    user_agent
     virtual_host
     remote_host
     remote_addr
+    referrer
     server_name
     server_software
     virtual_port
@@ -305,6 +308,12 @@ requires.
 
 If your application doesn't use C<< $cgi->redirect >>, you can ignore this
 method and generate the status code and headers arrayref another way.
+
+=head1 LIMITATIONS
+
+Do not use L<CGI::Pretty> or something similar in your controller. The
+module messes up L<CGI>'s DIY autoloader and breaks CGI::PSGI (and
+potentially other) inheritance.
 
 =head1 AUTHOR
 
